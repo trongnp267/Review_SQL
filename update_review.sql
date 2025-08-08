@@ -1,6 +1,11 @@
 -- Question1 
 select *
-from Customer;
+from Customer as C
+where exists (
+	select 1
+    from Orders as O
+    where C.customer_id = O.customer_id 
+); -- Chỗ này em thấy chỉ tìm những khách hàng đã order thì dùng exists tốc độ của nó sẽ nhanh hơn thay vì mình dùng JOIN ạ
 
 -- Question2 
 select *
@@ -45,13 +50,15 @@ CALL add_customer("Nguyen Phu Trong");
 DELIMITER //
 CREATE PROCEDURE delete_customer(IN delete_customer_id INT)
 BEGIN
-	DELETE FROM LineItem WHERE order_id IN (
-		SELECT order_id
-        FROM Orders
-        WHERE customer_id = delete_customer_id
-    );
-    DELETE FROM Orders WHERE customer_id = delete_customer_id;
-    DELETE FROM Customer WHERE customer_id = delete_customer_id;
+	START TRANSACTION;
+		DELETE FROM LineItem WHERE order_id IN (
+			SELECT order_id
+			FROM Orders
+			WHERE customer_id = delete_customer_id
+		);
+		DELETE FROM Orders WHERE customer_id = delete_customer_id;
+		DELETE FROM Customer WHERE customer_id = delete_customer_id;
+	COMMIT;
 END //
 DELIMITER ;
 CALL delete_customer(22);
